@@ -11,6 +11,10 @@ public class OnnxCheckerScript : MonoBehaviour
         return;
 #endif
 
+        var default_handler = Debug.unityLogger.logHandler;
+        var custom_handler = new CustomLogHandler(default_handler);
+        Debug.unityLogger.logHandler = custom_handler;
+
         try
         {
             var args = Environment.GetCommandLineArgs();
@@ -24,26 +28,26 @@ public class OnnxCheckerScript : MonoBehaviour
             {
                 throw new ArgumentException("Please specify onnx file path. (onnx_checker ./model.onnx)");
             }
-
             var optimize = true;
-            var converter = new ONNXModelConverter(optimize);
+            var converter = new ONNXModelConverter(optimize, true);
             var model = converter.Convert(path);
         }
         catch (OnnxImportException e)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(e.Message);
-            Console.ResetColor();
+            Debug.LogError(e.Message);
+        }
+        catch (OnnxLayerImportException e)
+        {
+            Debug.LogError(e.Message);
         }
         catch (ArgumentException e)
         {
-            Console.WriteLine(e.Message);
+            Debug.LogError(e.Message);
         }
-        finally
-        {
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey(false);
-            Application.Quit();
-        }
+
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey(false);
+        Debug.unityLogger.logHandler = default_handler;
+        Application.Quit();
     }
 }
